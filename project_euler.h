@@ -1,11 +1,10 @@
 #pragma once
-#include <unordered_map>
 
-uint64_t triangleNumber(double index) {
+inline uint64_t triangleNumber(double index) {
     return static_cast<uint64_t>((index + 1) * index / 2);
 }
 
-#define MAX_PRIME_BUF_SIZE 1024
+#define MAX_PRIME_BUF_SIZE 256
 uint64_t primeBuf[MAX_PRIME_BUF_SIZE] = {3, 5};
 uint64_t size = 1;
 
@@ -34,49 +33,34 @@ bool check(uint64_t num) {
     return true;
 }
 
-std::unordered_map<uint64_t, uint64_t> primeFactorize(uint64_t num) {
-    if (num < 2) return std::unordered_map<uint64_t, uint64_t>{};
-    if (isPrime(num)) return std::unordered_map<uint64_t, uint64_t>{{num, 1}};
-
-    std::unordered_map<uint64_t, uint64_t> factors;
+uint64_t getFactorCount(uint64_t num) {
+    uint64_t result = 1;
+    uint64_t factor_power = 2;
+    if (isPrime(num)) return 2;
 
     if (~num & 1) {
         num /= 2;
-        factors[2] = 1;
-        for (;;) {
-            if (~num & 1) {
-                num /= 2;
-                factors[2]++;
-            } else break;
-        }
+        for (; ~num & 1; num /= 2)
+            factor_power++;
+        result *= factor_power;
     }
 
     for (uint64_t i = 3; i <= num; i += 2) {
         if (!check(i)) continue;
         if (num % i == 0) {
             num /= i;
-            factors[i] = 1;
-            for (;;) {
-                if (num % i == 0) {
-                    num /= i;
-                    factors[i]++;
-                } else break;
-            }
+            factor_power = 2;
+            for (; num % i == 0; num /= i)
+                factor_power++;
+            result *= factor_power;
         }
     }
 
-    return factors;
-}
-
-uint64_t getFactorCount(uint64_t num) {
-    uint64_t result = 1;
-    for (const auto &f: primeFactorize(num))
-        result *= f.second + 1;
     return result;
 }
 
 uint64_t smallestTriangleNumberWithOverXAmountOfFactors(uint64_t X) {
-    for (uint64_t i = 1; i < UINT64_MAX; i++)
+    for (uint64_t i = 2; i < UINT64_MAX; i++)
         if (getFactorCount(triangleNumber(i)) >= X) return triangleNumber(i);
     return 0;
 }
